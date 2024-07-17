@@ -129,24 +129,28 @@
             const checkoutData = JSON.parse(localStorage.getItem('checkoutData')) || {};
             const totalPrice = activeReservations.reduce((sum, reservation) => sum + parseFloat(reservation.amount), 0);
         
-            // Remove the reservations from checkoutData to avoid duplication
             const { reservations, ...otherCheckoutData } = checkoutData;
         
             const bookingData = {
                 reservations: activeReservations,
-                checkoutData: otherCheckoutData, // This now excludes the reservations
+                checkoutData: otherCheckoutData,
                 totalPrice: totalPrice,
                 paymentDate: new Date().toISOString()
             };
         
-            fetch('http://localhost:3000/bookings', {
+            fetch('/api/bookings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(bookingData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 console.log('Success:', data);
                 // Show success message to the user
@@ -164,6 +168,7 @@
             .catch((error) => {
                 console.error('Error:', error);
                 // Show error message to the user
+                alert('There was an error processing your booking. Please try again.');
             })
             .finally(() => {
                 isSubmitting = false; // Reset the flag

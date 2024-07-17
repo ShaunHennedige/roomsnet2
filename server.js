@@ -1,15 +1,13 @@
 const express = require('express');
 const path = require('path');
 const bodyParser = require("body-parser");
-const app = express();
 const cors = require('cors');
-app.use(cors());
 
-// Middleware
+const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'build')));
 
-// In-memory storage for booking data (replace with a database in production)
 let bookings = [];
 
 // API Routes
@@ -19,7 +17,6 @@ app.get('/api/hello', (req, res) => {
 
 app.post('/api/bookings', (req, res) => {
   const bookingData = req.body;
-  // Store the booking data (replace with database storage in production)
   bookings.push(bookingData);
   console.log('Received booking data:', bookingData);
   res.json({ message: 'Booking data received successfully', id: bookings.length - 1 });

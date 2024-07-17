@@ -21,6 +21,14 @@ app.get('/api/bookings', (req, res) => {
   res.sendFile(path.join(__dirname, 'db.json'));
 });
 
+// Handle POST request to add a new booking
+app.post('/api/bookings', (req, res) => {
+  const bookingData = req.body;
+  bookings.push(bookingData); // Add the new booking to the array (you may want to save this to db.json or a database)
+  console.log('Received booking data:', bookingData);
+  res.json({ message: 'Booking data received successfully', id: bookings.length - 1 });
+});
+
 // Handle individual booking by ID (if needed)
 app.get('/api/bookings/:id', (req, res) => {
   const id = parseInt(req.params.id);

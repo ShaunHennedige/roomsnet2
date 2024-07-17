@@ -8,6 +8,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'build')));
 
+// Dummy data for bookings (replace with your actual data)
 let bookings = [];
 
 // API Routes
@@ -15,13 +16,12 @@ app.get('/api/hello', (req, res) => {
   res.send({ message: 'Hello from the server!' });
 });
 
-app.post('/api/bookings', (req, res) => {
-  const bookingData = req.body;
-  bookings.push(bookingData);
-  console.log('Received booking data:', bookingData);
-  res.json({ message: 'Booking data received successfully', id: bookings.length - 1 });
+// Serve db.json as bookings data
+app.get('/api/bookings', (req, res) => {
+  res.sendFile(path.join(__dirname, 'db.json'));
 });
 
+// Handle individual booking by ID (if needed)
 app.get('/api/bookings/:id', (req, res) => {
   const id = parseInt(req.params.id);
   if (id >= 0 && id < bookings.length) {

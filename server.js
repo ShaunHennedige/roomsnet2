@@ -54,6 +54,7 @@ app.post('/api/bookings', (req, res) => {
   });
 });
 
+
 // Serve React app
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));

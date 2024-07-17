@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROOMSNET</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="checkavailability.css">
+</head>
+<body>
+    <header class="navbar navbar-light bg-light shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.html">
+                <img src="system/images/ROOMSNET-removebg-preview.png" alt="" style="width: 150px; height: auto;">
+            </a>
+            <select class="form-select w-auto" id="currency-selector">
+                <option value="LKR">LKR</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+            </select>
+        </div>
+    </header>
+    
+    <div class="container mt-4">
+        <div class="row justify-content-center g-3">
+            <div class="col-md-6 col-lg-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="daterange" name="daterange" placeholder="Select Date Range">
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <button class="btn btn-primary w-100" onclick="checkAvailability()">Check Availability</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="room-cards"></div>
+            </div>
+            <div class="col-lg-4" id="reservation-column">
+                <button class="btn btn-close position-absolute top-0 end-0 m-2 d-lg-none" id="close-reservation-btn" onclick="hideFullReservation()"></button>
+                <div class="card" id="reservation-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Your Reservation</h5>
+                        <div id="reservation-list"></div>
+                        <div id="total-display" class="fw-bold mt-3">
+                            <p>Total: <span id="total-currency">LKR</span> <span id="total-amount">0</span> (Tax inclusive)</p>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 p-0">
+                        <button class="btn btn-primary w-100" onclick="proceedToBilling()">Proceed to Billing</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="floating-reservation-summary" class="d-none d-lg-none">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span id="reservation-count">0</span> room(s) selected
+                </div>
+                <div>
+                    Total: <span id="floating-total-currency">LKR</span> <span id="floating-total-amount">0</span>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="showFullReservation()">View Reservation</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="text-center">
+                <span>ROOMSNET &copy;
+                    <script>
+                        var d = new Date();
+                        document.write(d.getFullYear());
+                    </script>
+                </span>
+                <a href="bookingpolicy.html">&nbsp; Booking Policy</a>
+                <a href="contact.html">&nbsp; Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <script>
+        let exchangeRates = {};
+        let selectedDateRange = null;
+        let roomData = [];
+        
+        $(document).ready(function() {
+            fetch('https://open.er-api.com/v6/latest/LKR')
+                .then(response => response.json())
+                .then(data => {
+                    exchangeRates = data.rates;
+                    updateCurrencySelector();
+                    updatePrices();
+                });
+        
+            $('#currency-selector').on('change', updatePrices);
+        
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left',
+                minDate: moment(),
+                startDate: moment(),
+                endDate: moment().add(1, 'days'),
+                locale: {
+                    format: 'YYYY-MM-DD'
+                }
+            }, function(start, end, label) {
+                selectedDateRange = {
+                    start: start.format('YYYY-MM-DD'),
+                    end: end.format('YYYY-MM-DD')
+                };
+            });
+            
+            selectedDateRange = {
+                start: moment().format('YYYY-MM-DD'),
+                end: moment().add(1, 'days').format('YYYY-MM-DD')
+            };
+        
+            $(document).on('change', '.adults-input, .children-input', function() {
+                const card = $(this).closest('.room-card');
+                updateRoomPrice(card);
+            });
+        
+            $(document).on('click', '.add-reservation', function() {
+                const card = $(this).closest('.room-card');
+                addToReservation(card);
+            });
+        
+            $(document).on('click', '.remove-reservation', function() {
+                removeReservation($(this));
+            });
+        
+            $(window).resize(function() {
+                if (window.innerWidth > 991) {
+                    $('#reservation-column').show();
+                    $('#floating-reservation-summary').addClass('d-none');
+                } else {
+                    $('#reservation-column').hide();
+                    updateFloatingReservationSummary();
+                }
+            });
+        
+            updateFloatingReservationSummary();
+        });
+        
+        function updateCurrencySelector() {
+            const currencySelector = $('#currency-selector');
+            Object.keys(exchangeRates).forEach(currency => {
+                currencySelector.append(`<option value="${currency}">${currency}</option>`);
+            });
+        }
+        
+        function updatePrices() {
+            $('.room-card').each(function() {
+                updateRoomPrice($(this));
+            });
+            updateTotalAmount();
+        }
+        
+        function updateRoomPrice(card) {
+            const roomId = card.data('roomid');
+            const mealPlan = card.data('mealplan');
+            const room = roomData.find(r => r.roomtypeid == roomId && r.mealplan == mealPlan);
+            if (!room) return;
+        
+            const adults = parseInt(card.find('.adults-input').val());
+            const children = parseInt(card.find('.children-input').val());
+            let basePrice;
+            switch (adults) {
+                case 1: basePrice = parseFloat(room.singlerate); break;
+                case 2: basePrice = parseFloat(room.doublerate); break;
+                case 3: basePrice = parseFloat(room.triplerate); break;
+                case 4: basePrice = parseFloat(room.qdplrate); break;
+                case 5: basePrice = parseFloat(room.familyerate); break;
+                default: basePrice = parseFloat(room.doublerate);
+            }
+        
+            const childrenPrice = children * parseFloat(room.childrate);
+            const totalPrice = basePrice + childrenPrice;
+        
+            const selectedCurrency = $('#currency-selector').val();
+            const selectedRate = exchangeRates[selectedCurrency];
+            const convertedPrice = totalPrice / exchangeRates['LKR'] * selectedRate;
+        
+            card.find('.price').text(`${selectedCurrency} ${convertedPrice.toFixed(2)} Per Period`);
+            card.find('.price').data('price', totalPrice);
+        }
+        
+        function fetchRoomFeatures(roomTypeId, card) {
+            $.ajax({
+                url: `https://demo2.citruspms.site/API/IBE_GetRoomFeatures.aspx?roomtypeid=${roomTypeId}`,
+                dataType: 'json',
+                success: function(data) {
+                    const featureList = card.find('.room-features');
+                    let features = '';
+                    data.forEach(function(feature) {
+                        features += `<span class="text-success">✓</span> ${feature.feature} `;
+                    });
+                    featureList.html(`<p>${features}</p>`);
+                }
+            });
+        }
+        
+        function fetchRoomRates(dateFrom, dateTo) {
+            $('#room-cards').empty();
+            $.ajax({
+                url: `https://demo2.citruspms.site/API/IBE_GetRoomRates.aspx?datefrom=${dateFrom}&dateto=${dateTo}&currency=LKR`,
+                dataType: 'json',
+                success: function(data) {
+                    roomData = data;
+                    data.forEach(function(room) {
+                        const card = $(`
+                            <div class="card mb-4 room-card" data-roomid="${room.roomtypeid}" data-mealplan="${room.mealplan}">
+                                <div class="position-absolute top-0 end-0 bg-danger text-white px-2 py-1 rounded m-2">
+                                    ${room.discount}% OFF
+                                </div>
+                                <div class="row g-0">
+                                    <div class="col-md-4">
+                                        <img src="${room.mainimageurl}" class="img-fluid rounded-start card-img" alt="${room.roomtype}">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${room.roomtype} - ${room.mealplandesc}</h5>
+                                            <div class="room-features small"></div>
+                                            <div class="room-capacity d-flex align-items-center mt-2">
+                                                <span class="me-2">Room Capacity: ${room.maxoccupancy}</span>
+                                                <div class="capacity-icons">
+                                                    ${'👨'.repeat(room.maxadult)}
+                                                    ${'👶'.repeat(room.maxchild)}
+                                                </div>
+                                            </div>
+                                            <div class="available-rooms mt-2">
+                                                 <span class="badge ${room.maxavailable <=5 ? 'bg-warning' : 'bg-info'}">
+                                                    ${room.maxavailable <=5 ? `Only ${room.maxavailable} room${room.maxavailable !== 1 ? 's' : ''} available` : `Available Rooms: ${room.maxavailable}`}
+                                                </span>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="row g-2 align-items-center">
+                                                    <div class="col-auto">
+                                                        <label for="adults-${room.roomtypeid}-${room.mealplan}" class="col-form-label">Adults:</label>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <select id="adults-${room.roomtypeid}-${room.mealplan}" class="form-select form-select-sm adults-input">
+                                                            ${generateOptions(1, room.maxadult, 2)}
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <label for="children-${room.roomtypeid}-${room.mealplan}" class="col-form-label">Children:</label>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <select id="children-${room.roomtypeid}-${room.mealplan}" class="form-select form-select-sm children-input">
+                                                            ${generateOptions(0, room.maxchild)}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <button class="btn btn-primary btn-sm add-reservation">Reserve this room</button>
+                                                <span class="price text-success fw-bold" data-price="${room.doublerate}">LKR ${room.doublerate} Per Night</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`);
+                        $('#room-cards').append(card);
+                        fetchRoomFeatures(room.roomtypeid, card);
+                    });
+                    updatePrices();
+                }
+            });
+        }
+        
+        function generateOptions(start, end, defaultValue = null) {
+            let options = '';
+            for (let i = start; i <= end; i++) {
+                options += `<option value="${i}"${i === defaultValue ? ' selected' : ''}>${i}</option>`;
+            }
+            return options;
+        }
+        
+        function addToReservation(card) {
+            if (!selectedDateRange) {
+                alert('Please select a date range first.');
+                return;
+            }
+        
+            const roomId = card.data('roomid');
+            const mealPlan = card.data('mealplan');
+            const room = roomData.find(r => r.roomtypeid == roomId && r.mealplan == mealPlan);
+            if (!room) {
+                console.error('Room not found');
+                return;
+            }
+    
+            const availableRoomsElement = card.find('.available-rooms .badge');
+            let availableRooms;
+            if (availableRoomsElement.text().includes('Only')) {
+                availableRooms = parseInt(availableRoomsElement.text().match(/\d+/)[0]);
+            } else {
+                availableRooms = parseInt(availableRoomsElement.text().split(': ')[1]);
+            }
+    
+            if (availableRooms <= 0) {
+                alert('No more rooms available for this type.');
+                return;
+            }
+    
+            const newAvailableRooms = availableRooms - 1;
+            updateRoomCount(card, newAvailableRooms);
+        
+            const adults = parseInt(card.find('.adults-input').val());
+            const children = parseInt(card.find('.children-input').val());
+            const checkIn = selectedDateRange.start;
+            const checkOut = selectedDateRange.end;
+            const selectedCurrency = $('#currency-selector').val();
+            
+            if (!exchangeRates[selectedCurrency]) {
+                console.error('Exchange rate not available');
+                return;
+            }
+            
+            const selectedRate = exchangeRates[selectedCurrency];
+        
+            const totalPrice = parseFloat(card.find('.price').data('price'));
+            const convertedPrice = totalPrice / exchangeRates['LKR'] * selectedRate;
+        
+            const reservationDetails = {
+                roomId: roomId,
+                mealPlan: mealPlan,
+                roomType: room.roomtype,
+                mealPlanDesc: room.mealplandesc,
+                adults: adults,
+                children: children,
+                checkIn: checkIn,
+                checkOut: checkOut,
+                currency: selectedCurrency,
+                amount: convertedPrice.toFixed(2)
+            };
+        
+            let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+            reservations.push(reservationDetails);
+            localStorage.setItem('reservations', JSON.stringify(reservations));
+        
+            const reservationCard = `
+        <div class="reservation-item mb-3 card" data-roomid="${roomId}" data-mealplan="${mealPlan}">
+            <div class="card-body">
+                <h5 class="card-title">${room.roomtype}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">${room.mealplandesc}</h6>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <p class="card-text"><i class="bi bi-person"></i> ${adults} Adults, ${children} Children</p>
+                    </div>
+                    <div class="col-6">
+                        <p class="card-text"><i class="bi bi-calendar-check"></i> ${checkIn} - ${checkOut}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <p class="card-text fw-bold">${selectedCurrency} ${convertedPrice.toFixed(2)}</p>
+                    <button class="btn btn-outline-danger btn-sm remove-reservation" data-price="${convertedPrice}">
+                        <i class="bi bi-trash"></i> Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+            $('#reservation-list').append(reservationCard);
+        
+            updateTotalAmount();
+            updateFloatingReservationSummary();
+        }
+        
+        function removeReservation(button) {
+            const card = button.closest('.reservation-item');
+            const roomId = card.data('roomid');
+            const mealPlan = card.data('mealplan');
+            card.remove();
+    
+            const originalCard = $(`.room-card[data-roomid="${roomId}"][data-mealplan="${mealPlan}"]`);
+            const availableRoomsElement = originalCard.find('.available-rooms .badge');
+            let currentCount;
+            if (availableRoomsElement.text().includes('Only')) {
+                currentCount = parseInt(availableRoomsElement.text().match(/\d+/)[0]);
+            } else {
+                currentCount = parseInt(availableRoomsElement.text().split(': ')[1]);
+            }
+            updateRoomCount(originalCard, currentCount + 1);
+        
+            let reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+            reservations = reservations.filter(r => r.roomId != roomId || r.mealPlan != mealPlan);
+            localStorage.setItem('reservations', JSON.stringify(reservations));
+        
+            updateTotalAmount();
+            updateFloatingReservationSummary();
+        }
+    
+        function updateRoomCount(card, count) {
+            const badgeElement = card.find('.available-rooms .badge');
+            if (count <= 5) {
+                badgeElement.removeClass('bg-info').addClass('bg-warning');
+                badgeElement.text(`Only ${count} room${count !== 1 ? 's' : ''} available`);
+            } else {
+                badgeElement.removeClass('bg-warning').addClass('bg-info');
+                badgeElement.text(`Available Rooms: ${count}`);
+            }
+    
+            const reserveButton = card.find('.add-reservation');
+            if (count <= 0) {
+                reserveButton.prop('disabled', true).text('No rooms available');
+            } else {
+                reserveButton.prop('disabled', false).text('Reserve this room');
+            }
+        }
+        
+        function updateTotalAmount() {
+            const selectedCurrency = $('#currency-selector').val();
+            let totalAmount = 0;
+            $('.reservation-item').each(function() {
+                totalAmount += parseFloat($(this).find('.remove-reservation').data('price'));
+            });
+            $('#total-amount').text(totalAmount.toFixed(2));
+            $('#total-currency').text(selectedCurrency);
+            $('#floating-total-amount').text(totalAmount.toFixed(2));
+            $('#floating-total-currency').text(selectedCurrency);
+        }
+        
+        function updateFloatingReservationSummary() {
+            const reservationCount = $('#reservation-list').children().length;
+            $('#reservation-count').text(reservationCount);
+            
+            if (reservationCount > 0) {
+                $('#floating-reservation-summary').removeClass('d-none');
+            } else {
+                $('#floating-reservation-summary').addClass('d-none');
+            }
+        }
+        
+        function showFullReservation() {
+            $('#reservation-column').show();
+            $('body').addClass('reservation-open');
+            if (window.innerWidth <= 991) {
+                $('#close-reservation-btn').show();
+            }
+        }
+        
+        function hideFullReservation() {
+            $('#reservation-column').hide();
+            $('#close-reservation-btn').hide();
+            $('body').removeClass('reservation-open');
+        }
+        
+        $(window).resize(function() {
+            if (window.innerWidth > 991) {
+                $('#reservation-column').show();
+                $('#floating-reservation-summary').addClass('d-none');
+                $('#close-reservation-btn').hide();
+            } else {
+                $('#reservation-column').hide();
+                updateFloatingReservationSummary();
+                if ($('#reservation-column').is(':visible')) {
+                    $('#close-reservation-btn').show();
+                } else {
+                    $('#close-reservation-btn').hide();
+                }
+            }
+        });
+        
+        function checkAvailability() {
+            if (selectedDateRange) {
+                fetchRoomRates(selectedDateRange.start, selectedDateRange.end);
+            } else {
+                alert('Please select a date range first.');
+            }
+        }
+        
+        function proceedToBilling() {
+            setReloadFlag();
+            window.location.href = "checkout.html";
+        }
+        
+        function setReloadFlag() {
+            sessionStorage.setItem('needsReload', 'true');
+        }
+        
+        function checkAndReload() {
+            if (sessionStorage.getItem('needsReload') === 'true') {
+                sessionStorage.removeItem('needsReload');
+                location.reload();
+            }
+        }
+        
+        document.querySelector('button[onclick="proceedToBilling()"]').addEventListener('click', setReloadFlag);
+        
+        window.addEventListener('load', checkAndReload);
+        
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                checkAndReload();
+            }
+        });
+        
+        // Clear local storage only on page refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            if (performance.navigation.type === 1) {
+                localStorage.removeItem('reservations');
+                console.log('Local storage cleared due to page refresh');
+            } else {
+                console.log('Page loaded normally, local storage preserved');
+            }
+        });
+    </script>
+</body>
+</html>

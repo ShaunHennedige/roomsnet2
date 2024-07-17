@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ROOMSNET</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="contact.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <a class="navbar-brand" href="index.html">
+            <img src="system/images/ROOMSNET-removebg-preview.png" class="d-inline-block align-top" alt="ROOMSNET" style="width: 150px; height: auto;">
+        </a>
+    </nav>
+
+    <div class="content">
+        <div class="card w-75">
+            <div class="card-body">
+                <h1 id="hotelName" class="card-title text-center">Loading Hotel Name...</h1>
+                <h3 class="card-subtitle">Email</h3>
+                <p id="email" class="card-text">Loading...</p>
+                <h3 class="card-subtitle">Website</h3>
+                <a id="web" class="card-text" href="#">Loading...</a>
+                <h3 class="card-subtitle">Contact Number</h3>
+                <p id="phone" class="card-text">Loading...</p>
+                <h3 class="card-subtitle">Address</h3>
+                <p id="address" class="card-text">Loading...</p>
+
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="text-center">
+                <span>ROOMSNET &copy;
+                    <script>
+                        var d = new Date();
+                        document.write(d.getFullYear());
+                    </script>
+                </span>
+                <a href="bookingpolicy.html">&nbsp; Booking Policy</a>
+                <a href="contact.html">&nbsp; Contact Us</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+        function cleanJSON(jsonString) {
+            return jsonString.replace(/[\x00-\x1F\x7F-\x9F]/g, "");
+        }
+
+        async function fetchContactInfo() {
+            try {
+                const response = await fetch('https://api.allorigins.win/get?url=https://demopms.citruspms.site/api/IBE_Hoteldetail.aspx');
+                const data = await response.json();
+                const cleanData = cleanJSON(data.contents);
+                const hotelData = JSON.parse(cleanData);
+
+                // Extracting the required fields
+                const hotelName = hotelData.hotelname || 'Hotel Name Unavailable';
+                const address = hotelData.address || 'Address Unavailable';
+                const phone = hotelData.phone || 'Phone Unavailable';
+                const email = hotelData.email || 'Email Unavailable';
+                const web = hotelData.web || 'Website Unavailable';
+
+                document.getElementById('hotelName').innerText = hotelName;
+                document.getElementById('address').innerText = address;
+                document.getElementById('phone').innerText = phone;
+                document.getElementById('email').innerText = email;
+                document.getElementById('web').innerText = web;
+                document.getElementById('web').href = web;
+            } catch (error) {
+                console.error('Error fetching contact info:', error);
+                document.getElementById('address').innerText = 'Error loading address';
+                document.getElementById('phone').innerText = 'Error loading phone';
+                document.getElementById('email').innerText = 'Error loading email';
+                document.getElementById('web').innerText = 'Error loading website';
+            }
+        }
+
+        window.onload = fetchContactInfo;
+    </script>
+</body>
+</html>

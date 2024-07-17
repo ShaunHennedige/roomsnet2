@@ -1,0 +1,118 @@
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+}
+.main-content {
+  flex-grow: 1;
+}
+
+footer {
+  margin-top: 0;
+}
+
+.card {
+    margin-bottom: 20px;
+}
+
+.basket-item { display: flex; justify-content: space-between; }
+
+.col-md-4 {
+    position: fixed;
+    top: 70px; /* Adjust as needed based on your layout */
+    right: 80px; /* Adjust as needed based on your layout */
+    width: 25%; /* Adjust as needed based on your layout */
+    height: 80%; /* Set height to 100% of the viewport */
+    overflow-y: auto; /* Enable vertical scrolling if content overflows */
+    padding: 10px;
+    background-color: #f8f9fa; /* Optional: Set a background color */
+    border: 1px solid #ced4da; /* Optional: Add a border for visibility */
+    border-radius: 5px; /* Optional: Add border radius for a rounded look */
+    z-index: 100; /* Ensure the container is above other content */
+}
+.navbar-collapse {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.navbar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.nav-item {
+  margin-left: 10px;
+}
+
+#currency {
+  padding: 5px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-left: 10px;
+}
+/* Mobile Styles */
+@media (max-width: 767.98px) {
+    .col-md-4 {
+        position: static; /* Position the container relative to the flow */
+        width: 92%; /* Set width to 90% */
+        height: auto; /* Auto height for mobile */
+        overflow: hidden; /* Disable scrolling */
+        margin-top: 10px;
+        margin-left: 15px; /* Space after the navbar */
+    }
+
+    .container {
+        align-items: center; /* Center horizontally */
+        padding-bottom: 100px; /* Add padding to prevent content from being hidden */
+    }
+}
+@media (min-width: 992px) {
+  .sticky-card {
+      position: sticky;
+      top: 20px;
+  }
+}
+
+.reservation-card {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.reservation-card:hover {
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.reservation-item {
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.reservation-item h6 {
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.reservation-item p {
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+#total-price {
+  font-size: 1.2rem;
+  color: #28a745;
+}
+
+.delete-reservation {
+  padding: 5px 10px;
+  font-size: 0.8rem;
+}

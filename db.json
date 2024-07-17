@@ -1,0 +1,33 @@
+{
+  "bookings": [
+    {
+      "id": "4942",
+      "reservations": [
+        {
+          "roomId": 3,
+          "mealPlan": "Room Only",
+          "roomType": "Deluxe Triple Room",
+          "mealPlanDesc": "Room Only",
+          "adults": 2,
+          "children": 0,
+          "checkIn": "2024-07-17",
+          "checkOut": "2024-07-18",
+          "currency": "USD",
+          "amount": "50.00"
+        }
+      ],
+      "checkoutData": {
+        "personalInfo": {
+          "firstName": "SHAUN",
+          "lastName": "HENNEDIGE",
+          "email": "shaundvp@gmail.com",
+          "phone": "+94764778823",
+          "billingAddress": "63A Old Road Pannipitiya"
+        },
+        "totalPrice": 50
+      },
+      "totalPrice": 50,
+      "paymentDate": "2024-07-17T03:33:13.728Z"
+    }
+  ]
+}

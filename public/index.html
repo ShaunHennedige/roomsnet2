@@ -47,8 +47,39 @@
                         </div>
                         <div class="form-group">
                             <label for="dob">Date of Birth:</label>
-                            <input type="date" class="form-control" id="dob">
-                            <span class="error-message" id="dobError" style="display: none;">Please enter your Date of Birth.</span>
+                            <div class="row">
+                                <div class="col">
+                                    <select class="form-control" id="dobYear">
+                                        <option value="">Year</option>
+                                        <!-- Years will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select class="form-control" id="dobMonth">
+                                        <option value="">Month</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <select class="form-control" id="dobDay">
+                                        <option value="">Day</option>
+                                        <!-- Days will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                                
+                            </div>
+                            <span class="error-message" id="dobError" style="display: none;">Please select a valid Date of Birth.</span>
                         </div>
                         <div class="form-group">
                             <h6 class="text-left text-success nic-birthday"></h6>
@@ -81,26 +112,26 @@
         </header>
     </div>
 
-        <button class="chatbot-toggler">
-          <span class="material-symbols-rounded">mode_comment</span>
-          <span class="material-symbols-outlined">close</span>
-        </button>
-        <div class="chatbot">
-          <header>
-            <h2>Ask Me Anything</h2>
-            <span class="close-btn material-symbols-outlined">close</span>
-          </header>
-          <ul class="chatbox">
-            <li class="chat incoming">
-              <span class="material-symbols-outlined">smart_toy</span>
-              <p>Hi there 👋<br>How can I help you today?</p>
-            </li>
-          </ul>
-          <div class="chat-input">
-            <textarea placeholder="Enter a message..." spellcheck="false" required></textarea>
-            <span id="send-btn" class="material-symbols-rounded">send</span>
-          </div>
-        </div>
+    <button class="chatbot-toggler">
+      <span class="material-symbols-rounded">mode_comment</span>
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="chatbot">
+      <header>
+        <h2>Ask Me Anything</h2>
+        <span class="close-btn material-symbols-outlined">close</span>
+      </header>
+      <ul class="chatbox">
+        <li class="chat incoming">
+          <span class="material-symbols-outlined">smart_toy</span>
+          <p>Hi there 👋<br>How can I help you today?</p>
+        </li>
+      </ul>
+      <div class="chat-input">
+        <textarea placeholder="Enter a message..." spellcheck="false" required></textarea>
+        <span id="send-btn" class="material-symbols-rounded">send</span>
+      </div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
@@ -121,6 +152,44 @@
             { month: 'December', days: 31 },
         ];
 
+        // Populate days and years when the document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            populateDays();
+            populateYears();
+        });
+
+        function populateDays() {
+            var daySelect = document.getElementById('dobDay');
+            for(var i = 1; i <= 31; i++) {
+                var option = document.createElement('option');
+                option.value = i;
+                option.innerHTML = i;
+                daySelect.appendChild(option);
+            }
+        }
+
+        function populateYears() {
+            var yearSelect = document.getElementById('dobYear');
+            var currentYear = new Date().getFullYear();
+            for(var i = currentYear; i >= 1900; i--) {
+                var option = document.createElement('option');
+                option.value = i;
+                option.innerHTML = i;
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function getSelectedDate() {
+            var day = document.getElementById('dobDay').value;
+            var month = document.getElementById('dobMonth').value;
+            var year = document.getElementById('dobYear').value;
+            
+            if(day && month && year) {
+                return new Date(year, month - 1, day); // month is 0-indexed in JavaScript Date
+            }
+            return null;
+        }
+
         function handleLocal() {
             document.querySelector('.client-type').style.display = 'none';
             document.getElementById('residentForm').style.display = 'block';
@@ -130,7 +199,7 @@
             event.preventDefault();
             $('.nic-validate-btn').click();
             
-            const dob = document.getElementById('dob').value;
+            const dob = getSelectedDate();
             const dobError = document.getElementById('dobError');
             
             if (!dob) {
@@ -148,7 +217,7 @@
             $('.nic-birthday').html('');
             $('.nic-gender').html('');
             var nicNumber = $('.nic-validate').val();
-            var dob = $('#dob').val();
+            var dob = getSelectedDate();
             if (validation(nicNumber, dob)) {
                 var extractedData = extractData(nicNumber);
                 var days = extractedData.dayList;
@@ -172,7 +241,9 @@
             $('.nic-birthday').html('');
             $('.nic-gender').html('');
             $('.nic-validate').val('');
-            $('#dob').val('');
+            $('#dobDay').val('');
+            $('#dobMonth').val('');
+            $('#dobYear').val('');
             $('#dobError').hide();
         });
 
@@ -222,7 +293,6 @@
         }
 
         function validation(nic, dob) {
-            var dob = new Date(dob);
             var year = dob.getFullYear();
             var month = dob.getMonth() + 1;
             var day = dob.getDate();

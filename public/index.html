@@ -148,7 +148,8 @@
             $('.nic-birthday').html('');
             $('.nic-gender').html('');
             var nicNumber = $('.nic-validate').val();
-            if (validation(nicNumber)) {
+            var dob = $('#dob').val();
+            if (validation(nicNumber, dob)) {
                 var extractedData = extractData(nicNumber);
                 var days = extractedData.dayList;
                 var findedData = findDayANDGender(days, d_array);
@@ -162,7 +163,7 @@
                 $('.nic-birthday').html('Birthday: ' + birthday);
                 $('.nic-gender').html('Gender: ' + gender);
             } else {
-                $('.nic-validate-error').html('The NIC Number you entered is incorrect');
+                $('.nic-validate-error').html('The NIC Number does not match the given Date of Birth');
             }
         });
 
@@ -185,52 +186,59 @@
                 result.gender = 'Female';
                 dayList = dayList - 500;
             }
-            for (var i = 0; i < d_array.length; i++) {
-                if (d_array[i]['days'] < dayList) {
-                    dayList = dayList - d_array[i]['days'];
-                } else {
-                    month = d_array[i]['month'];
+
+            for (let i = 0; i < d_array.length; i++) {
+                if (dayList <= d_array[i].days) {
+                    result.day = dayList;
+                    result.month = d_array[i].month;
                     break;
+                } else {
+                    dayList = dayList - d_array[i].days;
                 }
-            }
-            result.day = dayList;
-            result.month = month;
-            return result;
-        }
-
-        function extractData(nicNumber) {
-            var result = { year: '', dayList: '', character: '' };
-            if (nicNumber.length === 10) {
-                result.year = '19' + nicNumber.substr(0, 2);
-                result.dayList = nicNumber.substr(2, 3);
-                result.character = nicNumber.substr(9, 10);
-            } else if (nicNumber.length === 12) {
-                result.year = nicNumber.substr(0, 4);
-                result.dayList = nicNumber.substr(4, 3);
-                result.character = 'no';
-            }
-            return result;
-        }
-
-        function validation(nicNumber) {
-            var result = false;
-            if (nicNumber.length === 10 && !isNaN(nicNumber.substr(0, 9)) && isNaN(nicNumber.substr(9, 1).toLowerCase()) && ['x', 'v'].includes(nicNumber.substr(9, 1).toLowerCase())) {
-                result = true;
-            } else if (nicNumber.length === 12 && !isNaN(nicNumber)) {
-                result = true;
-            } else {
-                result = false;
             }
             return result;
         }
 
         function getFormattedDate(date) {
             var year = date.getFullYear();
-            var month = (1 + date.getMonth()).toString();
-            month = month.length > 1 ? month : '0' + month;
-            var day = date.getDate().toString();
-            day = day.length > 1 ? day : '0' + day;
+            var month = (1 + date.getMonth()).toString().padStart(2, '0');
+            var day = date.getDate().toString().padStart(2, '0');
             return month + '/' + day + '/' + year;
+        }
+
+        function extractData(nic) {
+            var newNic = nic.replace(/[x|X|v|V]/, '');
+            var nicNumber = newNic.length;
+            var year = '';
+            var dayList = '';
+            if (nicNumber === 9) {
+                year = '19' + newNic.substring(0, 2);
+                dayList = newNic.substring(2, 5);
+            } else {
+                year = newNic.substring(0, 4);
+                dayList = newNic.substring(4, 7);
+            }
+            return { year: year, dayList: dayList };
+        }
+
+        function validation(nic, dob) {
+            var dob = new Date(dob);
+            var year = dob.getFullYear();
+            var month = dob.getMonth() + 1;
+            var day = dob.getDate();
+            var regularExpression = /^(([5-9])(\d)([0,1,2,3,5-8])(\d{6})([vVxX]))|(([12])(\d)(\d{2})([0,1,2,3,5-8])(\d{7}))/gm;
+            var newNic = nic.match(regularExpression);
+            var extractedData = extractData(nic);
+            var days = extractedData.dayList;
+            var findedData = findDayANDGender(days, d_array);
+            var month1 = findedData.month;
+            var year1 = extractedData.year;
+            var day1 = findedData.day;
+            if (newNic !== null && year === parseInt(year1) && day === day1) {
+                return true;
+            } else {
+                return false;
+            }
         }
     </script>
 </body>

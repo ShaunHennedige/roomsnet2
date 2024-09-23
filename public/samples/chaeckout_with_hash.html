@@ -1,0 +1,229 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ROOMSNET - Checkout</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="checkout.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    <script type="text/javascript" src="https://www.payhere.lk/lib/payhere.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="index.html">
+            <img src="system/images/ROOMSNET-removebg-preview.png" class="d-inline-block align-top" alt="" style="width: 150px; height: auto; padding: 0px; margin: 0px" />
+        </a>
+    </nav>
+    <main class="main-content">
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card reservation-card">
+                        <div class="card-body">
+                            <h4 class="card-title">Your Reservation</h4>
+                            <div id="basket" class="mb-3"></div>
+                            <div id="total-price" class="font-weight-bold mb-3"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card sticky-card">
+                        <div class="card-body">
+                            <h4 class="card-title">Billing Information</h4>
+                            <form id="checkout-form">
+                                <div class="form-group">
+                                    <label for="first-name">First Name</label>
+                                    <input type="text" class="form-control" id="first-name" name="first-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="last-name">Last Name</label>
+                                    <input type="text" class="form-control" id="last-name" name="last-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="phone">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="billing-address">Billing Address</label>
+                                    <textarea class="form-control" id="billing-address" name="billing-address" rows="3" required></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <input type="text" class="form-control" id="city" name="city" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="country">Country</label>
+                                    <input type="text" class="form-control" id="country" name="country" required>
+                                </div>
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="terms-check" required>
+                                    <label class="form-check-label" for="terms-check">
+                                        I accept the <a href="bookingpolicy.html" target="_blank">Terms and Conditions</a>
+                                    </label>
+                                </div>
+                                <button type="submit" id="payhere-payment" class="btn btn-primary">Pay Now</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="bg-light text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="text-center">
+                <span>ROOMSNET &copy;
+                    <script>
+                        var d = new Date();
+                        document.write(d.getFullYear());
+                    </script>
+                </span>
+                <a href="bookingpolicy.html">&nbsp; Booking Policy</a>
+                <a href="contact.html">&nbsp; Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let reservations = [];
+        let totalPrice = 0;
+        let iti;
+
+        function initPage() {
+            reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+            updateBasket();
+            initPhoneInput();
+        }
+
+        function updateBasket() {
+            const basket = document.getElementById('basket');
+            const totalPriceElem = document.getElementById('total-price');
+            basket.innerHTML = '';
+            totalPrice = 0;
+        
+            if (reservations.length > 0) {
+                reservations.forEach((reservation, index) => {
+                    const basketItem = document.createElement('div');
+                    basketItem.className = 'reservation-item';
+                    basketItem.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6>Room ${index + 1}: ${reservation.roomType}</h6>
+                                <p><i class="fas fa-utensils"></i> ${reservation.mealPlanDesc}</p>
+                                <p><i class="fas fa-users"></i> ${reservation.adults} Adults, ${reservation.children} Children</p>
+                                <p><i class="fas fa-calendar-check"></i> Check-in: ${reservation.checkIn}</p>
+                                <p><i class="fas fa-calendar-times"></i> Check-out: ${reservation.checkOut}</p>
+                                <p><i class="fas fa-money-bill-wave"></i> Amount: ${reservation.currency} ${reservation.amount} (Tax inclusive)</p>
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm delete-reservation" data-index="${index}">
+                                <i class="fas fa-trash"></i> 
+                            </button>
+                        </div>
+                    `;
+                    basket.appendChild(basketItem);
+                    totalPrice += parseFloat(reservation.amount);
+                });
+            } else {
+                basket.innerHTML = '<p class="text-muted">No reservations found.</p>';
+            }
+        
+            totalPriceElem.innerHTML = `<i class="fas fa-tags"></i> Total: <span class="text-success">${reservations.length > 0 ? reservations[0].currency : 'USD'} ${totalPrice.toFixed(2)}</span>`;
+        }
+
+        function initPhoneInput() {
+            const phoneInput = document.querySelector("#phone");
+            iti = window.intlTelInput(phoneInput, {
+                utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+                separateDialCode: true,
+                initialCountry: "auto",
+                geoIpLookup: function(success, failure) {
+                    $.get("https://ipinfo.io", function(response) {
+                        var countryCode = (response && response.country) ? response.country : "us";
+                        success(countryCode);
+                    }, "jsonp").fail(function() {
+                        success("us");
+                    });
+                },
+            });
+        }
+
+        function deleteReservation(index) {
+            reservations.splice(index, 1);
+            localStorage.setItem('reservations', JSON.stringify(reservations));
+            updateBasket();
+        }
+
+        function validateForm() {
+            if (!iti.isValidNumber()) {
+                alert('Please enter a valid phone number.');
+                return false;
+            }
+
+            if (!document.getElementById('terms-check').checked) {
+                alert('Please accept the Terms and Conditions to proceed.');
+                return false;
+            }
+
+            return true;
+        }
+
+        async function getHash() {
+            const response = await fetch('hash_generator.php');
+            const hash = await response.text();
+            return hash;
+        }
+
+        async function preparePayment() {
+            const hash = await getHash();
+            return {
+                "sandbox": true,
+                "merchant_id": "1227698",    // Replace with your Merchant ID 
+                "return_url": "http://localhost:3000/success.html",     // Important
+                "cancel_url": "http://localhost:3000/cancel.html",     // Important
+                "notify_url": "http://sample.com/notify",
+                "order_id": "ORDER-" + Date.now(),
+                "items": "Room Reservation",
+                "amount": totalPrice.toFixed(2),
+                "currency": reservations[0].currency,
+                "hash": hash,  // Generated hash value
+                "first_name": document.getElementById('first-name').value,
+                "last_name": document.getElementById('last-name').value,
+                "email": document.getElementById('email').value,
+                "phone": iti.getNumber(),
+                "address": document.getElementById('billing-address').value,
+                "city": document.getElementById('city').value,
+                "country": document.getElementById('country').value
+            };
+        }
+
+        document.getElementById('checkout-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            if (validateForm()) {
+                const payment = await preparePayment();
+                payhere.startPayment(payment);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage();
+
+            document.getElementById('basket').addEventListener('click', function(event) {
+                if (event.target.classList.contains('delete-reservation') || event.target.closest('.delete-reservation')) {
+                    const index = event.target.closest('.delete-reservation').dataset.index;
+                    deleteReservation(index);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

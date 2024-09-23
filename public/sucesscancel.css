@@ -1,0 +1,73 @@
+/* General styles for the page */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+body {
+    display: flex;
+    flex-direction: column;
+}
+.main-content {
+    flex: 1 0 auto; /* Allow content to take full height */
+}
+.footer {
+    background-color: #f8f9fa;
+    padding: 10px 0;
+}
+.reservation-item {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+#total-price {
+    font-size: 1.2em;
+    color: #007bff; /* Red color for declined payment */
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .text-center .btn {
+        width: 100%; /* Full width for buttons on mobile */
+        margin-bottom: 10px; /* Add some space between the buttons */
+    }
+    
+    .text-center .btn-secondary {
+        margin-left: 0; /* Remove left margin on secondary button */
+    }
+    
+    #total-price {
+        font-size: 1em; /* Adjust total price font size for smaller screens */
+    }
+    
+    .main-content {
+        padding: 0 15px; /* Add padding for smaller screens */
+    }
+    
+    .footer {
+        font-size: 0.9em; /* Slightly reduce footer font size for mobile */
+        padding: 15px 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .text-center .btn {
+        font-size: 0.9em; /* Further reduce button text size for very small screens */
+    }
+    
+    #total-price {
+        font-size: 0.9em; /* Further adjust total price font size */
+    }
+    
+    .main-content {
+        padding: 0 10px;
+    }
+    
+    .footer {
+        font-size: 0.85em; /* Adjust footer text size for very small screens */
+        padding: 10px;
+    }
+}

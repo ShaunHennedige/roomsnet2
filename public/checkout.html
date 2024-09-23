@@ -1,22 +1,24 @@
 <!DOCTYPE HTML>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ROOMSNET</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
-    <link rel="stylesheet" href="checkout.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-</head>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ROOMSNET - Checkout</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="checkout.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    </head>
+    
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="index.html">
-          <img src="system/images/ROOMSNET-removebg-preview.png" class="d-inline-block align-top" alt="" style="width: 150px; height: auto; padding: 0px; margin: 0px" />
+            <img src="system/images/ROOMSNET-removebg-preview.png" class="d-inline-block align-top" alt="" style="width: 150px; height: auto;" />
         </a>
     </nav>
     <main class="main-content">
@@ -35,7 +37,7 @@
                     <div class="card sticky-card">
                         <div class="card-body">
                             <h4 class="card-title">Billing Information</h4>
-                            <form id="checkout-form" action="paymentgateway.html" method="get">
+                            <form id="checkout-form">
                                 <div class="form-group">
                                     <label for="first-name">First Name</label>
                                     <input type="text" class="form-control" id="first-name" name="first-name" required>
@@ -56,14 +58,30 @@
                                     <label for="billing-address">Billing Address</label>
                                     <textarea class="form-control" id="billing-address" name="billing-address" rows="3" required></textarea>
                                 </div>
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <input type="text" class="form-control" id="city" name="city" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="country">Country</label>
+                                    <input type="text" class="form-control" id="country" name="country" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="requests">Special Requests / Notes</label>
+                                    <textarea class="form-control" id="requests" name="requests" rows="3" placeholder="Enter any special requests here"></textarea>
+                                </div>
                                 <div class="form-group form-check">
                                     <input type="checkbox" class="form-check-input" id="terms-check" required>
                                     <label class="form-check-label" for="terms-check">
                                         I accept the <a href="bookingpolicy.html" target="_blank">Terms and Conditions</a>
                                     </label>
                                 </div>
-                                <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                                <button type="submit" class="btn btn-primary">Submit Reservation</button>
                             </form>
+                            <br><br>
+                            <div id="processing-message" style="display: none;" class="alert alert-info text-center">
+                                Processing your reservation, please wait...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -73,12 +91,7 @@
     <footer class="bg-light text-center text-lg-start mt-4">
         <div class="container p-4">
             <div class="text-center">
-                <span>ROOMSNET &copy;
-                    <script>
-                        var d = new Date();
-                        document.write(d.getFullYear());
-                    </script>
-                </span>
+                <span>ROOMSNET &copy; <span id="current-year"></span></span>
                 <a href="bookingpolicy.html">&nbsp; Booking Policy</a>
                 <a href="contact.html">&nbsp; Contact Us</a>
             </div>
@@ -86,60 +99,26 @@
     </footer>
 
     <script>
-        // Function to reset localStorage
-        function resetLocalStorage() {
-            const currentReservations = JSON.parse(localStorage.getItem('reservations')) || [];
-            if (currentReservations.length > 0) {
-                localStorage.setItem('activeReservations', JSON.stringify(currentReservations));
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
             }
-            localStorage.removeItem('reservations');
-        }
-
-        // Clear localStorage when the page is unloaded (including refresh and exit)
-        window.addEventListener('beforeunload', function(event) {
-            resetLocalStorage();
-        });
-
-        // Clear localStorage and reload the page when navigating back
-        window.addEventListener('popstate', function(event) {
-            resetLocalStorage();
-            location.reload();
-        });
-
-        // Function to set timeout for clearing localStorage
-        function setInactivityTimeout() {
-            const timeout = 10 * 60 * 1000; // 10 minutes in milliseconds
-            return setTimeout(function() {
-                resetLocalStorage();
-                alert('Your session has expired due to inactivity. The page will reload.');
-                location.reload();
-            }, timeout);
-        }
-
-        // Initialize the timeout
-        let inactivityTimeout = setInactivityTimeout();
-
-        // Reset the timeout on user activity
-        function resetTimeout() {
-            clearTimeout(inactivityTimeout);
-            inactivityTimeout = setInactivityTimeout();
-        }
-
-        // Add event listeners for user activity
-        ['mousedown', 'keydown', 'touchstart', 'scroll'].forEach(function(event) {
-            document.addEventListener(event, resetTimeout, true);
-        });
-
-        // Load reservation details from localStorage
+        };
+        // Update the current year dynamically
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    
         const reservations = JSON.parse(localStorage.getItem('reservations')) || [];
         const basket = document.getElementById('basket');
         const totalPriceElem = document.getElementById('total-price');
         let totalPrice = 0;
-
+    
         function updateBasket() {
             basket.innerHTML = '';
             totalPrice = 0;
-        
+    
             if (reservations.length > 0) {
                 reservations.forEach((reservation, index) => {
                     const basketItem = document.createElement('div');
@@ -165,13 +144,13 @@
             } else {
                 basket.innerHTML = '<p class="text-muted">No reservations found.</p>';
             }
-        
+    
             totalPriceElem.innerHTML = `<i class="fas fa-tags"></i> Total: <span class="text-success">${reservations.length > 0 ? reservations[0].currency : 'USD'} ${totalPrice.toFixed(2)}</span>`;
         }
-
+    
         updateBasket();
-
-        // Event listener for delete buttons
+    
+        // Handle delete action for reservation
         document.addEventListener('click', function(e) {
             if (e.target && e.target.closest('.delete-reservation')) {
                 const index = e.target.closest('.delete-reservation').dataset.index;
@@ -179,96 +158,302 @@
             }
         });
 
-        // Initialize intl-tel-input
-        const phoneInput = document.querySelector("#phone");
-        const iti = window.intlTelInput(phoneInput, {
-            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-            separateDialCode: true,
-            initialCountry: "auto",
-            geoIpLookup: function(success, failure) {
-                $.get("https://ipinfo.io", function(response) {
-                    var countryCode = (response && response.country) ? response.country : "us";
-                    success(countryCode);
-                }, "jsonp").fail(function() {
-                    success("us");
-                });
-            },
-        });
-
-        function validateAndSubmit() {
-            if (!iti.isValidNumber()) {
-                alert('Please enter a valid phone number.');
-                return;
-            }
-
-            if (!document.getElementById('terms-check').checked) {
-                alert('Please accept the Terms and Conditions to proceed.');
-                return;
-            }
-
-            // Check if all reservations have the same check-in and check-out dates
-            let isValid = true;
-            let checkInDate = '';
-            let checkOutDate = '';
-
-            for (let i = 0; i < reservations.length; i++) {
-                if (i === 0) {
-                    checkInDate = reservations[i].checkIn;
-                    checkOutDate = reservations[i].checkOut;
-                } else {
-                    if (reservations[i].checkIn !== checkInDate || reservations[i].checkOut !== checkOutDate) {
-                        isValid = false;
-                        break;
-                    }
-                }
-            }
-
-            if (!isValid) {
-                alert('All reservations must have the same check-in and check-out dates to proceed to payment.');
-                return;
-            }
-
-            // Get form data
-            const formData = {
-                firstName: document.getElementById('first-name').value,
-                lastName: document.getElementById('last-name').value,
-                email: document.getElementById('email').value,
-                phone: iti.getNumber(),
-                billingAddress: document.getElementById('billing-address').value
-            };
-
-            // Combine form data with reservation data
-            const checkoutData = {
-                personalInfo: formData,
-                reservations: reservations,
-                totalPrice: totalPrice
-            };
-
-            // Store checkout data in localStorage under a new key
-            localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-
-            // Store activeReservations in localStorage
-            localStorage.setItem('activeReservations', JSON.stringify(reservations));
-
-            // Clear the original reservations data
-            localStorage.removeItem('reservations');
-
-            // Redirect to payment gateway
-            window.location.href = 'paymentgateway.html';
-        }
-
-        // Function to handle reservation deletion
+        // Function to store billing information in localStorage
+    function storeBillingInformation() {
+        const billingInfo = {
+            firstName: document.getElementById('first-name').value,
+            lastName: document.getElementById('last-name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            billingAddress: document.getElementById('billing-address').value,
+            city: document.getElementById('city').value,
+            country: document.getElementById('country').value,
+            requests: document.getElementById('requests').value
+        };
+        localStorage.setItem('personalInformation', JSON.stringify(billingInfo));
+    }
+    
         function deleteReservation(index) {
             reservations.splice(index, 1);
             localStorage.setItem('reservations', JSON.stringify(reservations));
             updateBasket();
         }
+    
+        // Validate form data and submit
+        function validateForm() {
+            if (!document.getElementById('terms-check').checked) {
+                alert('Please accept the Terms and Conditions to proceed.');
+                return false;
+            }
+            return true;
+        }
+        // Submit reservation to backend
+        function generateRandomId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        function getRoomTypeCodeFromMealPlan(mealPlanDesc) {
+            // Simple mapping based on the meal plan description
+            if (mealPlanDesc.includes("Room Only")) {
+                return "Room Only";
+            } else if (mealPlanDesc.includes("BB")) {
+                return "BB"; // Bed & Breakfast
+            } else if (mealPlanDesc.includes("HB")) {
+                return "HB"; // Half Board
+            } else if (mealPlanDesc.includes("FB")) {
+                return "FB"; // Full Board
+            } else {
+                return "Room Only"; // Default to Room Only if no match
+            }
+        }
+        
+        function submitReservation() {
+            const firstName = document.getElementById('first-name')?.value || "Unknown";
+            const lastName = document.getElementById('last-name')?.value || "Unknown";
+            const email = document.getElementById('email')?.value || "Unknown";
+            const phone = document.getElementById('phone')?.value || "Unknown";
+            const billingAddress = document.getElementById('billing-address')?.value || "Unknown";
+            const city = document.getElementById('city')?.value || "Unknown";
+            const country = document.getElementById('country')?.value || "Unknown";
+            const specialRequests = document.getElementById('requests')?.value || "Unknown";
+        
+            const insertedAt = new Date().toISOString();
+            const reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+        
+            const pageCurrency = reservations.length > 0 ? reservations[0].currency : "USD";
+            const totalAmount = reservations.reduce((sum, reservation) => sum + parseFloat(reservation.amount), 0).toFixed(2);
+            const mealPlan = reservations.length > 0 ? reservations[0].mealPlanDesc : "Breakfast is included";
+            const paymentCollect = "hotel collect";
+            const checkInDate = reservations.length > 0 ? reservations[0].checkIn : "2024-10-09";
+            const checkOutDate = reservations.length > 0 ? reservations[0].checkOut : "2024-10-10";
+        
+            function calculateNights(checkIn, checkOut) {
+                const checkInDate = new Date(checkIn);
+                const checkOutDate = new Date(checkOut);
+                const timeDiff = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+                return Math.ceil(timeDiff / (1000 * 3600 * 24)); // Difference in days
+            }
+        
+            function addDays(date, days) {
+                const result = new Date(date);
+                result.setDate(result.getDate() + days);
+                return result;
+            }
+        
+            // Initialize reservationData object without the days breakdown initially
+            const reservationData = {
+                data: [
+                    {
+                        id: generateRandomId(),
+                        attributes: {
+                            id: generateRandomId(),
+                            meta: {
+                                ruid: generateRandomId()
+                            },
+                            status: "new",
+                            services: [],
+                            currency: pageCurrency,
+                            amount: totalAmount, // Total amount
+                            agent: null,
+                            inserted_at: insertedAt,
+                            ota_name: "Citrus IBE",
+                            property_id: generateRandomId(),
+                            channel_id: generateRandomId(),
+                            unique_id: +Math.floor(Math.random() * 10000000000),
+                            system_id: generateRandomId(),
+                            booking_id: generateRandomId(),
+                            notes: specialRequests,
+                            arrival_date: checkInDate,
+                            arrival_hour: null,
+                            departure_date: checkOutDate,
+                            customer: {
+                                meta: {
+                                    is_genius: false
+                                },
+                                name: firstName,
+                                surname: lastName,
+                                address: billingAddress,
+                                country: country,
+                                city: city,
+                                zip: null,
+                                mail: email,
+                                phone: phone
+                            },
+                            payment_collect: paymentCollect,
+                            deposits: null,
+                            guarantee: null,
+                            rooms: reservations.map((reservation) => {
+                                const nights = calculateNights(reservation.checkIn, reservation.checkOut);
+                                const amountPerNight = (parseFloat(reservation.amount) / nights).toFixed(2);
+            
+                                const daysBreakdown = {};
+                                for (let i = 0; i < nights; i++) {
+                                    const currentDate = addDays(reservation.checkIn, i).toISOString().split('T')[0];
+                                    daysBreakdown[currentDate] = amountPerNight;
+                                }
+            
+                                return {
+                                    meta: {
+                                        mapping_id: generateRandomId(),
+                                        parent_rate_plan_id: generateRandomId(),
+                                        rate_plan_code: reservation.ratePlanCode || 9536508,
+                                        room_type_code: reservation.roomId,
+                                        days_breakdown: Object.keys(daysBreakdown).map(date => ({
+                                            date: date,
+                                            amount: daysBreakdown[date],
+                                            promotion: {
+                                                id: null,
+                                                title: null
+                                            },
+                                            rate_code: reservation.rateCode || 9536508,
+                                            rate_plan: generateRandomId()
+                                        })),
+                                        cancel_penalties: [
+                                            {
+                                                amount: "0.00",
+                                                currency: pageCurrency,
+                                                from: insertedAt
+                                            },
+                                            {
+                                                amount: reservation.penaltyAmount || "0.00",
+                                                currency: pageCurrency,
+                                                from: "2024-10-07T18:30:00"
+                                            }
+                                        ],
+                                        meal_plan: getRoomTypeCodeFromMealPlan(reservation.mealPlanDesc),
+                                        policies: null,
+                                        room_remarks: [],
+                                        smoking_preferences: null
+                                    },
+                                    taxes: reservation.taxes || [],
+                                    amount: reservation.amount || totalAmount,
+                                    services: [],
+                                    days: daysBreakdown,
+                                    booking_room_id: generateRandomId(),
+                                    rate_plan_id: generateRandomId(),
+                                    room_type_id: reservation.roomId,
+                                    guests: [
+                                        {
+                                            name: firstName,
+                                            surname: lastName
+                                        }
+                                    ],
+                                    occupancy: {
+                                        children: reservations.length > 0 ? reservations[0].children : 1,
+                                        adults: reservations.length > 0 ? reservations[0].adults : 4,
+                                        infants: 0,
+                                        ages: reservations.length > 0 ? reservations[0].ages : [6]
+                                    },
+                                    ota_commission: "00.00",
+                                    checkin_date: reservation.checkIn,
+                                    checkout_date: reservation.checkOut,
+                                    is_cancelled: false,
+                                    ota_unique_id: null
+                                };
+                            }),
+                            secondary_ota: null,
+                            occupancy: {
+                                children: reservations.length > 0 ? reservations[0].children : 1,
+                                adults: reservations.length > 0 ? reservations[0].adults : 4,
+                                infants: 0,
+                                ages: reservations.length > 0 ? reservations[0].ages : [6]
+                            },
+                            acknowledge_status: "pending",
+                            ota_commission: "00.00",
+                            ota_reservation_code: Math.floor(Math.random() * 10000000000).toString(),
+                            raw_message: "{\"services\":[], ...}"
+                        },
+                        relationships: {
+                            data: {
+                                property: {
+                                    id: generateRandomId(),
+                                    type: "property"
+                                },
+                                booking: {
+                                    id: generateRandomId(),
+                                    type: "booking"
+                                }
+                            }
+                        }
+                    }
+                ],
+                meta: {
+                    total: 1,
+                    limit: 10,
+                    order_by: "inserted_at",
+                    page: 1,
+                    order_direction: "asc"
+                }
+            };
+            
+            // Serialize using JSON.stringify to preserve the order of fields
+            const jsonString = JSON.stringify(reservationData);
+            
+        
+            // After reservationData is initialized, add the days breakdown for all reservations
+            reservations.forEach((reservation) => {
+                const nights = calculateNights(reservation.checkIn, reservation.checkOut);
+                const amountPerNight = (parseFloat(reservation.amount) / nights).toFixed(2);
+        
+                const daysBreakdown = {};
+                for (let i = 0; i < nights; i++) {
+                    const currentDate = addDays(reservation.checkIn, i).toISOString().split('T')[0];
+                    daysBreakdown[currentDate] = amountPerNight;
+                }
+        
+                // Assign daysBreakdown for this reservation
+                reservationData.data[0].attributes.days = {
+                    ...reservationData.data[0].attributes.days,
+                    ...daysBreakdown
+                };
+            });
+        
+            localStorage.setItem('personalData', JSON.stringify(reservationData));
+        
+            document.getElementById('processing-message').style.display = 'block';
+        
+            const backendURL = window.location.hostname === 'localhost'
+                ? 'http://localhost:3001'
+                : 'https://hammerhead-app-kc9hq.ondigitalocean.app';
+        
+            $.ajax({
+                type: "POST",
+                url: `${backendURL}/api/bookings`,
+                data: JSON.stringify(reservationData),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (data) {
+                    document.getElementById('processing-message').style.display = 'none';
+                    if (data) {
+                        toastr.success('Reservation Submitted Successfully!');
+                        window.location.href = "success.html";
+                    } else {
+                        toastr.warning('There was an issue with your reservation.');
+                        console.error('Warning: There was an issue with your reservation.');
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    document.getElementById('processing-message').style.display = 'none';
+                    toastr.error('Error occurred while submitting your reservation.');
+                    console.error('Error details:', textStatus, errorThrown);
+                }
+            });
+        }     
+        
+        
+        // Handle the form submission event
+    document.getElementById('checkout-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        if (validateForm()) {
+            // Store the billing information in localStorage
+            storeBillingInformation();
+            submitReservation();
+        }
+    });
+        
 
-        // Event listener for form submission
-        document.getElementById('checkout-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            validateAndSubmit();
-        });
     </script>
 </body>
 </html>

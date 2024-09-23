@@ -221,3 +221,161 @@ footer a:hover {
 body.reservation-open {
     overflow: hidden;
 }
+#check-availability-text {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #1c5fa7;
+    border-radius: 5px;
+    transition: background 0.3s, transform 0.3s;
+}
+
+#check-availability-text i {
+    margin-left: 8px;
+}
+.hotel-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.hotel-details {
+    flex: 2;
+}
+
+.map-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.more-images {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 24px;
+    border-radius: 10px;
+}
+
+.more-images span {
+    position: absolute;
+}
+
+.address-container {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.map-container iframe {
+    margin-top: 40px;
+    width: 100%;
+    height: 320px; /* Adjusted height for desktop */
+    border: 0;
+    border-radius: 10px;
+}
+
+.show-map-btn {
+    margin-top: 20px;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* Mobile view: Smaller images */
+@media (max-width: 768px) {
+    .hotel-container {
+        flex-direction: column;
+    }
+
+    .map-container iframe {
+        height: 200px;
+        margin-top: -25px;
+    }
+
+    .more-images {
+        font-size: 18px;
+    }
+
+    .show-map-btn {
+        font-size: 14px;
+    }
+}
+
+/* Full grid layout with 3 columns and 3 rows */
+.hotel-images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+    grid-template-rows: repeat(3, 1fr);    /* 3 equal rows */
+    gap: 10px; /* Space between the images */
+    grid-template-areas: 
+        "image1 image1 image2"
+        "image1 image1 image3"
+        "image4 image5 image6";
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f9fa; /* Soft background for contrast */
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for appeal */
+}
+
+.image-large {
+    grid-area: image1;
+    width: 100%;
+    height: auto;
+}
+
+.image-small {
+    width: 100%;
+    height: auto;
+    cursor: pointer;
+}
+
+
+.hotel-images img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition on hover */
+}
+
+.hotel-images img:hover {
+    transform: scale(1.05); /* Slight zoom effect on hover */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+
+/* Grid area assignments */
+.hotel-images .image1 { grid-area: image1; } /* Image1 spans two columns and two rows */
+.hotel-images .image2 { grid-area: image2; } /* Image2 on the top right */
+.hotel-images .image3 { grid-area: image3; } /* Image3 on the bottom right spanning two rows */
+.hotel-images .image4 { grid-area: image4; } /* Image4 on the bottom left */
+.hotel-images .image5 { grid-area: image5; } /* Image5 in the middle left */
+.hotel-images .image5 { grid-area: image6; } /* Image5 in the middle left */
+
+/* Responsive layout for smaller screens */
+@media (max-width: 768px) {
+    .hotel-images {
+        display: none; /* Hide the grid on mobile */
+    }
+
+    #hotelImagesCarousel {
+        display: block; /* Show the carousel on mobile */
+    }
+}
+
+@media (min-width: 768px) {
+    #hotelImagesCarousel {
+        display: none; /* Hide the carousel on desktop */
+    }
+}
+

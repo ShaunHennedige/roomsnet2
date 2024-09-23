@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ROOMSNET - Payment Declined</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="sucesscancel.css">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="index.html">
+          <img src="system/images/ROOMSNET-removebg-preview.png" class="d-inline-block align-top" alt="" style="width: 150px; height: auto; padding: 0px; margin: 0px" />
+        </a>
+    </nav>
+    <main class="main-content">
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-lg-8 offset-lg-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h2 class="card-title text-danger text-center mb-4">
+                                <i class="fas fa-times-circle"></i> Payment Declined
+                            </h2>
+                            <p class="text-center">We're sorry, but your payment was declined. Your reservation has not been confirmed.</p>
+                            <div id="reservation-details" class="mb-4"></div>
+                            <div id="total-price" class="font-weight-bold mb-4 text-center" style="color: rgb(222, 9, 9);"></div>
+                            <div class="text-center">
+                                <a href="checkout.html" class="btn btn-primary">
+                                    <i class="fas fa-redo"></i> Try Payment Again
+                                </a>
+                                <a href="index.html" class="btn btn-secondary">
+                                    <i class="fas fa-home"></i> Return to Home
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer bg-light text-center text-lg-start mt-4">
+        <div class="container p-4">
+            <div class="text-center">
+                <span>ROOMSNET &copy;
+                    <script>
+                        var d = new Date();
+                        document.write(d.getFullYear());
+                    </script>
+                </span>
+                <a href="bookingpolicy.html">&nbsp; Booking Policy</a>
+                <a href="contact.html">&nbsp; Contact Us</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) {
+                return false;
+            }
+        };
+        
+        let reservations = [];
+        let totalPrice = 0;
+
+        function initPage() {
+            reservations = JSON.parse(localStorage.getItem('reservations')) || [];
+            updateReservationDetails();
+        }
+
+        function updateReservationDetails() {
+            const reservationDetails = document.getElementById('reservation-details');
+            const totalPriceElem = document.getElementById('total-price');
+            reservationDetails.innerHTML = '';
+            totalPrice = 0;
+        
+            if (reservations.length > 0) {
+                reservations.forEach((reservation, index) => {
+                    const reservationItem = document.createElement('div');
+                    reservationItem.className = 'reservation-item mb-3';
+                    reservationItem.innerHTML = `
+                        <h5>Room ${index + 1}: ${reservation.roomType}</h5>
+                        <p><i class="fas fa-utensils"></i> ${reservation.mealPlanDesc}</p>
+                        <p><i class="fas fa-users"></i> ${reservation.adults} Adults, ${reservation.children} Children</p>
+                        <p><i class="fas fa-calendar-check"></i> Check-in: ${reservation.checkIn}</p>
+                        <p><i class="fas fa-calendar-times"></i> Check-out: ${reservation.checkOut}</p>
+                        <p><i class="fas fa-money-bill-wave"></i> Amount: ${reservation.currency} ${reservation.amount} (Tax inclusive)</p>
+                    `;
+                    reservationDetails.appendChild(reservationItem);
+                    totalPrice += parseFloat(reservation.amount);
+                });
+            } else {
+                reservationDetails.innerHTML = '<p class="text-muted">No reservations found.</p>';
+            }
+        
+            totalPriceElem.innerHTML = `<i class="fas fa-tags"></i> Total: <span class="text-danger">${reservations.length > 0 ? reservations[0].currency : 'USD'} ${totalPrice.toFixed(2)}</span>`;
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

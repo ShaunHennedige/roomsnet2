@@ -189,3 +189,31 @@ header h2 {
     display: block;
   }
 }
+.whatsapp-button {
+  font-size: 50px; /* Adjust size as needed */
+  color: #007bff; /* WhatsApp green color */
+  position: fixed;
+  bottom: 75px;
+  right: 35px;
+  z-index: 1000; /* Ensure it's above other elements */
+  }
+
+  .whatsapp-button img {
+      width: 60px; /* Adjust size as needed */
+      height: auto;
+      border-radius: 50%; /* Makes it round */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Optional: adds a shadow */
+  }
+
+  /* Media query for screens smaller than 768px */
+  @media (max-width: 768px) {
+      .whatsapp-button {
+          bottom: 80px; /* Adjust position for smaller screens */
+          right: 30px; /* Adjust position for smaller screens */
+          font-size: 40px; /* Reduce font size for smaller screens */
+      }
+      
+      .whatsapp-button img {
+          width: 50px; /* Adjust image size for smaller screens */
+      }
+  }

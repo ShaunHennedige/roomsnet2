@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@payhere-js-sdk/client": "^1.0.4",
     "@talkjs/react": "^0.1.9",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^0.21.4",
-    "body-parser": "^1.20.2",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
@@ -20,18 +21,6 @@
     "talkjs": "^0.22.0",
     "web-vitals": "^2.1.4"
   },
-<<<<<<< Updated upstream
- "scripts": {
-  "start": "concurrently \"react-scripts start\" \"npm run json-server\"",
-  "build": "CI=false react-scripts build",
-  "test": "react-scripts test",
-  "eject": "react-scripts eject",
-  "server": "node index.js",
-  "json-server": "json-server --watch db.json --port 3000",
-  "dev": "concurrently \"npm run server\" \"npm start\""
-},
-
-=======
   "scripts": {
     "start": "concurrently \"react-scripts start\" \"npm run json-server\"",
     "build": "react-scripts build",
@@ -41,7 +30,6 @@
     "json-server": "json-server --watch db.json --port 3000",
     "dev": "concurrently \"npm run server\" \"npm start\""
   },
->>>>>>> Stashed changes
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -62,21 +50,12 @@
   },
   "proxy": "http://localhost:3001",
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/plugin-proposal-private-property-in-object": "^7.0.0",
     "concurrently": "^6.5.1",
-    "json-server": "^1.0.0-beta.1"
+    "json-server": "^1.0.0-beta.1",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^5.1.4"
   },
-  "description": "This project was bootstrapped with Create React App.",
-  "main": "server.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ShaunHennedige/roomsnet.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/ShaunHennedige/roomsnet/issues"
-  },
-  "homepage": "https://github.com/ShaunHennedige/roomsnet#readme"
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "server.js"
 }

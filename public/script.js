@@ -1,96 +1,71 @@
-const chatbotToggler = document.querySelector(".chatbot-toggler");
-const closeBtn = document.querySelector(".close-btn");
-const chatbox = document.querySelector(".chatbox");
-const chatInput = document.querySelector(".chat-input textarea");
-const sendChatBtn = document.querySelector(".chat-input span");
+document.getElementById('checkout-form').addEventListener('submit', function (event) {
+    event.preventDefault(); // Prevent form from submitting normally
 
-let userMessage = null;
-const API_KEY = "sk-proj-dusW0fDSBMX2hd4ecZsmT3BlbkFJzE64Dv4GIcIbIuTqvS0J";
-const inputInitHeight = chatInput.scrollHeight;
+    const customer = {
+        first_name: document.getElementById('first-name').value,
+        last_name: document.getElementById('last-name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('billing-address').value,
+        city: document.getElementById('city').value,
+        country: document.getElementById('country').value
+    };
 
-const createChatLi = (message, className) => {
-  const chatLi = document.createElement("li");
-  chatLi.classList.add("chat", `${className}`);
-  let chatContent = className === "outgoing" ? `<p></p>` : `<span class="material-symbols-outlined">smart_toy</span><p></p>`;
-  chatLi.innerHTML = chatContent;
-  chatLi.querySelector("p").textContent = message;
-  return chatLi;
-}
+    // Generate dynamic order ID
+    const order_id = 'ORDER_' + Math.floor(Math.random() * 1000000).toString();
 
-const generateResponse = async (chatElement, attempt = 1) => {
-  const API_URL = "https://api.openai.com/v1/chat/completions";
-  const messageElement = chatElement.querySelector("p");
+    // Retrieve amount and currency from the active reservation
+    const reservations = JSON.parse(localStorage.getItem('activeReservations')) || [];
+    const amount = reservations.length > 0 ? reservations[0].amount : '0.00';
+    const currency = reservations.length > 0 ? reservations[0].currency : 'USD';
 
-  const requestOptions = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: userMessage }],
+    console.log("Sending request to generate payment hash...");
+
+    // Step 1: Generate hash from the backend
+    fetch('http://localhost:3001/api/generate-hash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ order_id, amount, currency })
     })
-  }
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json(); // Parse JSON if the response was OK
+    })
+    .then(data => {
+        if (data.hash) {
+            console.log('Hash generated:', data.hash);
 
-  try {
-    const res = await fetch(API_URL, requestOptions);
-    if (res.status === 429) {
-      if (attempt <= 5) {
-        const delay = Math.pow(2, attempt) * 1000;
-        console.warn(`Rate limit exceeded. Retrying in ${delay / 1000} seconds...`);
-        setTimeout(() => generateResponse(chatElement, attempt + 1), delay);
-      } else {
-        messageElement.classList.add("error");
-        messageElement.textContent = "Rate limit exceeded. Please try again later.";
-      }
-    } else {
-      const data = await res.json();
-      if (data.choices && data.choices.length > 0) {
-        messageElement.textContent = data.choices[0].message.content.trim();
-      } else {
-        messageElement.classList.add("error");
-        messageElement.textContent = "Oops! Something went wrong. Please try again.";
-      }
-    }
-  } catch (error) {
-    messageElement.classList.add("error");
-    messageElement.textContent = "Oops! Something went wrong. Please try again.";
-  } finally {
-    chatbox.scrollTo(0, chatbox.scrollHeight);
-  }
-}
+            // Step 2: Prepare payment details
+            const payment = {
+                sandbox: true, 
+                merchant_id: '1227698', 
+                return_url: 'success.html', 
+                cancel_url: 'cancel.html', 
+                notify_url: 'http://localhost:3001/notify', 
+                order_id: order_id, 
+                items: 'Room Booking', 
+                amount: amount, 
+                currency: currency, 
+                hash: data.hash, 
+                first_name: customer.first_name, 
+                last_name: customer.last_name, 
+                email: customer.email, 
+                phone: customer.phone, 
+                address: customer.address, 
+                city: customer.city, 
+                country: customer.country
+            };
 
-const handleChat = () => {
-  userMessage = chatInput.value.trim();
-  if (!userMessage) return;
-
-  chatInput.value = "";
-  chatInput.style.height = `${inputInitHeight}px`;
-
-  chatbox.appendChild(createChatLi(userMessage, "outgoing"));
-  chatbox.scrollTo(0, chatbox.scrollHeight);
-
-  setTimeout(() => {
-    const incomingChatLi = createChatLi("Thinking...", "incoming");
-    chatbox.appendChild(incomingChatLi);
-    chatbox.scrollTo(0, chatbox.scrollHeight);
-    generateResponse(incomingChatLi);
-  }, 600);
-}
-
-chatInput.addEventListener("input", () => {
-  chatInput.style.height = `${inputInitHeight}px`;
-  chatInput.style.height = `${chatInput.scrollHeight}px`;
+            // Step 3: Start payment
+            payhere.startPayment(payment);
+        } else {
+            alert('Error generating payment hash.');
+        }
+    })
+    .catch(error => {
+        console.error('Error while generating payment hash:', error);
+        alert('Failed to generate payment hash. Please try again.');
+    });
 });
-
-chatInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey && window.innerWidth > 800) {
-    e.preventDefault();
-    handleChat();
-  }
-});
-
-sendChatBtn.addEventListener("click", handleChat);
-closeBtn.addEventListener("click", () => document.body.classList.remove("show-chatbot"));
-chatbotToggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
